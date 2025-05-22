@@ -5,4 +5,5 @@ public enum InboundProtocol: String, Encodable {
 
     case socks
     case http
+    case tun
 }
