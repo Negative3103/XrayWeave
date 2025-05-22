@@ -5,6 +5,7 @@ public enum InboundConfigurationObject: Encodable {
 
     case socks(SocksInboundConfigurationObject)
     case http(timeout: Int)
+    case tun(TunInboundConfigurationObject)
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
@@ -13,6 +14,8 @@ public enum InboundConfigurationObject: Encodable {
             try container.encode(object)
         case .http(let timeout):
             try container.encode(["timeout": timeout])
+        case .tun(let object):
+            try container.encode(object)
         }
     }
 }
