@@ -96,7 +96,9 @@ public struct XrayWeave {
                 "sid": jsonObject["sid"] as? String ?? "",
                 "spx": jsonObject["spx"] as? String ?? "",
                 "type": jsonObject["net"] as? String ?? "tcp",
-                "security": jsonObject["tls"] as? String ?? "none"
+                "security": jsonObject["tls"] as? String ?? "none",
+                "host": jsonObject["host"] as? String ?? "",
+                "path": jsonObject["path"] as? String ?? "/"
             ]
             
             return
