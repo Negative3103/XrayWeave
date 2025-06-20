@@ -155,6 +155,8 @@ public struct StreamSettings: Encodable, XrayParsable {
         switch network {
         case .tcp:
             tcpSettings = StreamSettings.TCP()
+        case .ws:
+            break
         default:
             throw NSError.newError("Unsupported network type: \(network.rawValue)")
         }

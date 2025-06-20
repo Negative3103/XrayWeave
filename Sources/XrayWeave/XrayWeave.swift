@@ -24,6 +24,8 @@ public struct XrayWeave {
                 throw NSError.newError("Invalid JSON in decoded vmess URI")
             }
             
+            print("✅ Декодирован JSON:", jsonObject)
+
             self.outboundProtocol = .vmess
             self.userID = (jsonObject["id"] as? String) ?? ""
             self.host = (jsonObject["add"] as? String) ?? ""
