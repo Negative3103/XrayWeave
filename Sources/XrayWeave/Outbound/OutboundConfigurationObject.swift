@@ -6,13 +6,18 @@ import Foundation
 public enum OutboundConfigurationObject: Encodable, XrayParsable {
 
     case vless(VlessOutboundConfigurationObject)
+    case vmess(VmessOutboundConfigurationObject)
 
     init(_ parser: XrayWeave) throws {
         switch parser.outboundProtocol {
         case .vless:
             self = .vless(try VlessOutboundConfigurationObject(parser))
+        case .vmess:
+            self = .vmess(try VmessOutboundConfigurationObject(parser))
         case .freedom:
             throw NSError.newError("Fix me 🥲")
+        default:
+            throw NSError.newError("Unsupported outbound protocol: \(parser.outboundProtocol)")
         }
     }
 
@@ -20,6 +25,8 @@ public enum OutboundConfigurationObject: Encodable, XrayParsable {
         var container = encoder.singleValueContainer()
         switch self {
         case .vless(let object):
+            try container.encode(["vnext": [object]])
+        case .vmess(let object):
             try container.encode(["vnext": [object]])
         }
     }

@@ -15,6 +15,39 @@ public struct XrayWeave {
     let parametersMap: [String: String]
 
     public init(urlString: String) throws {
+        if urlString.starts(with: "vmess://") {
+            let base64Part = urlString.replacingOccurrences(of: "vmess://", with: "")
+            guard let data = Data(base64Encoded: base64Part) else {
+                throw NSError.newError("Invalid base64 in vmess URI")
+            }
+            guard let jsonObject = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                throw NSError.newError("Invalid JSON in decoded vmess URI")
+            }
+            
+            self.outboundProtocol = .vmess
+            self.userID = (jsonObject["id"] as? String) ?? ""
+            self.host = (jsonObject["add"] as? String) ?? ""
+            self.port = Int(jsonObject["port"] as? String ?? "") ?? (jsonObject["port"] as? Int ?? 443)
+            self.network = StreamSettings.Network(rawValue: (jsonObject["net"] as? String ?? "tcp")) ?? .tcp
+            self.security = StreamSettings.Security(rawValue: (jsonObject["tls"] as? String ?? "none")) ?? .none
+            self.fragment = (jsonObject["ps"] as? String) ?? ""
+            
+            self.parametersMap = [
+                "aid": jsonObject["aid"] as? String ?? "0",
+                "scy": jsonObject["scy"] as? String ?? "auto",
+                "fp": jsonObject["fp"] as? String ?? "",
+                "alpn": jsonObject["alpn"] as? String ?? "",
+                "sni": jsonObject["sni"] as? String ?? "",
+                "pbk": jsonObject["pbk"] as? String ?? "",
+                "sid": jsonObject["sid"] as? String ?? "",
+                "spx": jsonObject["spx"] as? String ?? "",
+                "type": jsonObject["net"] as? String ?? "tcp",
+                "security": jsonObject["tls"] as? String ?? "none"
+            ]
+            
+            return
+        }
+        
         guard let urlComponents = URLComponents(string: urlString) else {
             throw NSError.newError("Can't create URL components")
         }
