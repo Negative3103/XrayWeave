@@ -15,6 +15,58 @@ public struct XrayWeave {
     let parametersMap: [String: String]
 
     public init(urlString: String) throws {
+        if urlString.starts(with: "ss://") {
+            let encoded = urlString.replacingOccurrences(of: "ss://", with: "")
+            
+            // Разделение base64@host:port
+            let parts = encoded.split(separator: "@")
+            guard parts.count == 2 else {
+                throw NSError.newError("Invalid ss:// format")
+            }
+            
+            // Декодируем method:password
+            guard let userData = Data(base64Encoded: String(parts[0])) else {
+                throw NSError.newError("Invalid base64 in ss://")
+            }
+            let userString = String(decoding: userData, as: UTF8.self)
+            let userParts = userString.split(separator: ":")
+            guard userParts.count == 2 else {
+                throw NSError.newError("Invalid method:password in ss://")
+            }
+            
+            let method = String(userParts[0])
+            let password = String(userParts[1])
+            
+            // Парсим host и port
+            let hostAndPort = parts[1].split(separator: "#")[0]
+            let hostParts = hostAndPort.split(separator: ":")
+            guard hostParts.count == 2 else {
+                throw NSError.newError("Invalid host:port in ss://")
+            }
+            
+            let host = String(hostParts[0])
+            let port = Int(hostParts[1]) ?? 443
+            let tag = parts[1].split(separator: "#").dropFirst().joined(separator: "#")
+            
+            // Присваиваем
+            self.outboundProtocol = .shadowsocks
+            self.userID = "" // не используется
+            self.host = host
+            self.port = port
+            self.network = .tcp // shadowsocks всегда tcp
+            self.security = .none
+            self.fragment = tag
+            
+            self.parametersMap = [
+                "method": method,
+                "password": password,
+                "type": "tcp",
+                "security": "none"
+            ]
+            
+            return
+        }
+        
         if urlString.starts(with: "vmess://") {
             let base64Part = urlString.replacingOccurrences(of: "vmess://", with: "")
             guard let data = Data(base64Encoded: base64Part) else {
