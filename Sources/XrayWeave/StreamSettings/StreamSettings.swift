@@ -64,13 +64,16 @@ public struct StreamSettings: Encodable, XrayParsable {
         }
     }
     
-    public struct WebSocketSettings: Encodable {
-        public var path: String
-        public var headers: [String: String]?
+    public struct WS: Encodable {
+        var path: String
+        var headers: [String: String]?
 
-        public init(path: String = "/", headers: [String: String]? = nil) {
-            self.path = path
-            self.headers = headers
+        init(_ parser: XrayWeave) throws {
+            self.path = parser.parametersMap["path"] ?? "/"
+
+            if let host = parser.parametersMap["host"], !host.isEmpty {
+                self.headers = ["Host": host]
+            }
         }
     }
 
@@ -157,7 +160,7 @@ public struct StreamSettings: Encodable, XrayParsable {
     public var tcpSettings: TCP? = nil
     public var realitySettings: Reality? = nil
     public var tlsSettings: TLS? = nil
-    public var wsSettings: WebSocketSettings? = nil
+    public var wsSettings: WS? = nil
 
     init(_ parser: XrayWeave) throws {
         network = parser.network
@@ -167,10 +170,7 @@ public struct StreamSettings: Encodable, XrayParsable {
         case .tcp:
             tcpSettings = StreamSettings.TCP()
         case .ws:
-            let path = parser.parametersMap["path"] ?? "/"
-            let hostHeader = parser.parametersMap["host"]
-            let headers = hostHeader.map { ["Host": $0] }
-            wsSettings = WebSocketSettings(path: path, headers: headers)
+            wsSettings = try WS(parser)
         default:
             throw NSError.newError("Unsupported network type: \(network.rawValue)")
         }
@@ -190,7 +190,7 @@ public struct StreamSettings: Encodable, XrayParsable {
         security: Security,
         tcpSettings: TCP? = nil,
         realitySettings: Reality? = nil,
-        wsSettings: WebSocketSettings? = nil,
+        wsSettings: WS? = nil,
         tlsSettings: TLS? = nil
     ) {
         self.network = network
